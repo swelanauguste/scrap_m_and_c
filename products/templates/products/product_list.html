@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="row">
+    <div class="col-lg-2 mb-3 mb-lg-0">
+        <div style="overflow-y:scroll; overflow-x:hidden; height: 50vh;">
+            {% for brand in unique_brands %}
+            <a class="badge text-bg-secondary"
+                href="{% url 'product_list' %}?brand={{brand}}">{{brand}}</a>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="col">
+        <div class="mx-3"
+            style="position: fixed; bottom: 3%; left: 0; right: 0; margin: auto; z-index: 1000;">
+            <form class="col-lg-3 mx-auto"
+                method="get"
+                action="">
+                <input class="form-control rounded-pill"
+                    type="text"
+                    name="q"
+                    placeholder="Search by name or brand"
+                    value="{{ request.GET.q }}">
+            </form>
+        </div>
+        <div class="row row-cols-1 row-cols-md-4 g-4">
+            {% for ob in object_list %}
+            <div class="col">
+                <div class="card rounded-4 shadow">
+                    <div class="text-center">
+                        <img class="card-img"
+                            style="width: 85%;"
+                            height="320px"
+                            src="{{ob.image}}"
+                            alt=""
+                            srcset="">
+                    </div>
+                    <hr>
+                    <div class="px-4 py-3 text-center">
+                        <h3 class="card-title">${{ ob.price }}</h3>
+                        <p>{{ ob.name }}</p>
+                        <p class="text-muted fw-bold">{{ ob.brand }}</p>
+                        <p class="text-muted">{{ ob.supplier|title }}</p>
+                    </div>
+                </div>
+            </div>
+            {% empty %}
+            <p class="text-center">No results</p>
+            {% endfor %}
+        </div>
+        <br>
+        <div class="text-center">
+            {% if is_paginated %}
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                <a href="?q={{ request.GET.q }}&page=1">&laquo; first</a>
+                <a
+                    href="?q={{ request.GET.q }}&page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of
+                    {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                <a
+                    href="?q={{ request.GET.q }}&page={{ page_obj.next_page_number }}">next</a>
+                <a
+                    href="?q={{ request.GET.q }}&page={{ page_obj.paginator.num_pages }}">last
+                    &raquo;</a>
+                {% endif %}
+            </span>
+            {% endif %}
+            <br><br>
+        </div>
+
+    </div>
+</div>
+
+
+
+{% endblock content %}
