@@ -1,10 +1,10 @@
 {% extends 'base.html' %}
 {% block content %}
 <div class="row">
-    <div class="col-lg-2 mb-3 mb-lg-0">
-        <div style="overflow-y:scroll; overflow-x:hidden; height: 50vh;">
+    <div class="col-lg-2 mb-3 mb-lg-0 px-2 text-end">
+        <div style="overflow-y:scroll; overflow-x:hidden; height: 90vh;">
             {% for brand in unique_brands %}
-            <a class="badge text-bg-secondary"
+            <a class="badge text-bg-dark"
                 href="{% url 'product_list' %}?brand={{brand}}">{{brand}}</a>
             {% endfor %}
         </div>
@@ -37,7 +37,7 @@
                     <hr>
                     <div class="px-4 py-3 text-center">
                         <h3 class="card-title">${{ ob.price }}</h3>
-                        <p>{{ ob.name }}</p>
+                        <p>{{ ob.name|truncatechars:35 }}</p>
                         <p class="text-muted fw-bold">{{ ob.brand }}</p>
                         <p class="text-muted">{{ ob.supplier|title }}</p>
                     </div>

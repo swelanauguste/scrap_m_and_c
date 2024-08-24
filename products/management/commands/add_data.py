@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Import products from a CSV file"
 
     def handle(self, *args, **kwargs):
-        with open("/home/cworks/Developer/scrap_m_and_c/scrappers/data/mc_drugstore.csv", newline="", encoding="utf-8") as csvfile:
+        with open("/home/cworks/Developer/scrap_m_and_c/scrappers/data/massy_cleaned_1.csv", newline="", encoding="utf-8") as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
                 product, created = Product.objects.get_or_create(
@@ -22,8 +22,8 @@ class Command(BaseCommand):
                     .replace("\n", "").strip(),
                     brand=row["category"].strip(),
                     url=row["url"].strip(),
-                    image=row["img_url"].strip(),
-                    supplier='m&c drugstore',
+                    image=row["img"].strip(),
+                    supplier='massy',
                     # supplier=row["supplier"].strip(),
                     # price=row['price'].replace('"', '').replace('$',''),
                     # defaults={

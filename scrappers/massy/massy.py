@@ -2,119 +2,108 @@ import csv
 import sys
 import time
 from dataclasses import asdict, dataclass
+from urllib.parse import urljoin
 
 import httpx
+from bs4 import BeautifulSoup
+from playwright.sync_api import Playwright, sync_playwright
 from selectolax.parser import HTMLParser
 
 
-# @dataclass
-# class Product:
-#     name: str | None
-#     price: str | None
-#     brand: str | None
-#     url: str | None
-#     image: str | None
+@dataclass
+class Product:
+    name: str | None
+    price: str | None
+    category: str | None
+    url: str | None
+    image: str | None
 
 
-# def get_html(base_url, page):
-#     print("getting html...")
-#     headers = {
-#         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-#     }
-
-#     resp = httpx.get(
-#         base_url + str(page), headers=headers, timeout=None, follow_redirects=True
-#     )
-#     html = HTMLParser(resp.text)
-#     return html
+def append_to_csv(data):
+    print("exporting to csv...")
+    with open("massy_pharmaceutical.csv", "a") as f:
+        writer = csv.DictWriter(f, ["name", "price", "category", "url", "image"])
+        # writer.writeheader()
+        writer.writerows(data)
 
 
-# def extract_text(html, sel):
-#     try:
-#         return html.css_first(sel).text()
-#     except AttributeError:
-#         return None
+def get_products(products):
+    for product in products:
+        new_item = Product(
+            name=product.css_first("h2").text(),
+            price=product.css_first("p.offer-price.mb-0").text(),
+            category=category_url.replace(
+                "https://www.shopmassystoresslu.com/product-category/", ""
+            ).replace("/", ""),
+            url=product.css_first("a").attributes["href"],
+            image=product.css_first("img").attributes["src"],
+        )
+        yield (asdict(new_item))
+        # print(asdict(new_item))
 
 
-# def extract_attribute(html, sel, attr):
-#     try:
-#         return html.css_first(sel).attributes[attr]
-#     except AttributeError:
-#         return None
+with sync_playwright() as p:
+    base_url = "https://www.shopmassystoresslu.com"
+    # def main(playwright: Playwright):
+    browser = p.chromium.launch(headless=False)
+    context = browser.new_context()
+    page = context.new_page()
+    page.goto(base_url)
+    # page.wait_for_selector("div#popmake-377265")
+    page.click("button.pum-close")
+    page.locator("[name=wcmlim_change_lc_to]").select_option("Gourmet")
+    html = page.inner_html("#slider_76188")
+    html = HTMLParser(html)
 
+    categories = html.css("div.owl-item.active")
+    categories_links = []
+    for category in categories:
+        category_link = category.css_first("a").attributes["href"]
+        categories_links.append(
+            category_link.replace("https://www.shopmassystoresslu.com", "")
+        )
 
-# def parse_page(html):
-#     products = html.css("div.product-small.box")
-#     # print(products)
+    for category_link in categories_links[7:8]:
+        category_url = base_url + category_link
+        print("-----", category_url, "------")
 
-#     for product in products:
-#         site_base_url = "https://www.mandchomedepot.com"
-#         new_item = Product(
-#             name=extract_text(
-#                 product, "a.woocommerce-LoopProduct-link"
-#             ),  # print(product.css_first("a.woocommerce-LoopProduct-link").text()) name
-#             price=extract_text(
-#                 product, "div.price-wrapper"
-#             ),  # print(product.css_first("div.price-wrapper").text()) price
-#             brand=extract_text(
-#                 product, "p.category"
-#             ),  # print(product.css_first("p.category").text()) brand/category
-#             image=extract_attribute(
-#                 product, "img", "data-src"
-#             ),  # image = product.css_first("img").attributes["src"] image
-#             url=extract_attribute(
-#                 product, "a", "href"
-#             ),  # url = product.css_first("a").attributes["href"] link
-#         )
-#         # print(product.css_first("a div").text())
-#         # print(product.css_first(".price").text())
-#         # print(product.css_first(".tagline-4.product-brand").text())
-#         yield asdict(new_item)
+        # for i in range(24, 25):
+        #     print(f"loading page {i}...")
 
+        #     page.goto(f"{category_url}page/{i}/" )
+        #     page.locator("[name=wcmlim_change_lc_to]").select_option("Gourmet")
+        #     page.wait_for_selector("div.row.products")
+        #     html = page.inner_html("div.row.products")
+        #     html = HTMLParser(html)
+        #     products = html.css("div.col-md-4.col-xs-6.pmb-3")
+        #     print("page", i, "contents", len(products))
+            
+        #     append_to_csv(get_products(products))
+        #     print("page", i, "done")
+        #     time.sleep(3)
 
-# def append_to_csv(data):
-#     print("exporting to csv...")
-#     with open("computer_world.csv", "a") as f:
-#         writer = csv.DictWriter(f, ["name", "price", "brand", "url", "image"])
-#         writer.writeheader()
-#         writer.writerows(data)
+    #             break
+    # append_to_csv(get_products(category_url))
 
-
-# def main():
-#     product_list = []
-#     base_url = "https://computerworldslu.com/shop/page/"
-#     for i in range(1, 11):
-#         data = parse_page(get_html(base_url, i))
-#         for item in data:
-#             product_list.append(item)
-#     append_to_csv(product_list)
-
-
-# if __name__ == "__main__":
-#     main()
-
-base_url = "https://www.shopmassystoresslu.com/product-category/wines-spirits/alcoholic-beverages/beer-shandy-malts/"
-headers = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36"
-}
-
-resp = httpx.get(
-    base_url, headers=headers, timeout=None, follow_redirects=True
-)
-
-# print(resp.status_code)
-
-html = HTMLParser(resp.text)
-
-products = html.css("div.product")
-# print(products[0].css_first("a").attributes["href"]) link
-# print(products[0].css_first("img").attributes["src"]) img
-# print(products[0].css_first("h2").text()) name
-print(products[0].css_first("div.product-footer p").text()) #price
-
-# for product in products:
-# url = product.css_first("a").attributes["href"] link
-# image = product.css_first("img").attributes["src"] image
-# print(product.css_first("p.category").text()) brand/category
-# print(product.css_first("a.woocommerce-LoopProduct-link").text()) name
-# print(product.css_first("div.price-wrapper").text()) price
+    #     try:
+    #         page.locator("[name=wcmlim_change_lc_to]").select_option("Gourmet")
+    #         loading_more_button = page.locator("a.lmp_button")
+    #         while loading_more_button.is_visible():
+    #             page.click("a.lmp_button")
+    #             page.wait_for_selector("div.row.products")
+    #             html = page.inner_html("div.row.products")
+    #             html = HTMLParser(html)
+    #             get_products(html, category_url)
+    #             break
+    #     except:
+    #         page.wait_for_selector("div.row.products")
+    #         loading_more_button = page.locator("a.lmp_button")
+    #         while loading_more_button.is_visible():
+    #             # print("loading more...")
+    #             # if loading_more_button.is_visible():
+    #             page.click("a.lmp_button")
+    #             page.wait_for_selector("div.row.products")
+    #             html = page.inner_html("div.row.products")
+    #             html = HTMLParser(html)
+    #             get_products(html, category_url)
+    #             break
